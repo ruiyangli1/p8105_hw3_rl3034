@@ -1,8 +1,80 @@
 ---
 title: "P8105 Homework 3"
 author: "Ruiyang Li"
+date: '`r format(Sys.time(), "%Y-%m-%d")`'
 output: github_document
 ---
 
 This is my solution to HW3.
+
+```{r setup, include=FALSE}
+library(p8105.datasets)
+library(tidyverse)
+```
+
+
+## Problem 1
+
+```{r instacart_df}
+data("instacart")
+```
+
+Instacart is an online grocery service that provides online shopping from local stores. For example, in New York City, such local partner stores include Whole Foods, Fairway, and The Food Emporium. Normally, orders will be delivered within 2 hours after placement. 
+
+The Instacart data consists of `r nrow(instacart)` rows of online grocery orders and `r ncol(instacart)` variables from `r length(unique(instacart$user_id))` Instacrat customers. In this dataset, each customer has one or more orders, so the data is in the long format. Some of the key variables include information on customers / orders such as user ID, order ID, order day, and order hour, and information on products such as name, aisle, and department. 
+
+
+* There are `r length(unique(pull(instacart, aisle_id)))` aisles. The most items are ordered from `r instacart %>% count(aisle) %>% arrange(desc(n)) %>% slice(1) %>% select(aisle) %>% as.character()` aisles, which have `r instacart %>% count(aisle) %>% arrange(desc(n)) %>% slice(1) %>% select(n)` orders. 
+
+```{r collapse=TRUE}
+instacart %>% 
+	count(aisle) %>% 
+	arrange(desc(n))
+```
+
+
+* The following plot shows the aisles with more than 10000 items ordered. 
+
+```{r collapse=TRUE}
+instacart %>% 
+	count(aisle) %>% 
+	filter(n > 10000) %>% 
+	mutate(
+		aisle = factor(aisle),
+		aisle = fct_reorder(aisle, n)
+	) %>% 
+	ggplot(aes(x = aisle, y = n)) + 
+	geom_point() + 
+	theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+* The next table shows the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. 
+
+```{r collapse=TRUE}
+instacart %>% 
+  filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>% 
+  group_by(aisle) %>% 
+  count(product_name) %>% 
+  arrange(desc(n)) %>% 
+  slice(1:3) %>% 
+  ungroup() %>% 
+  knitr::kable()
+```
+
+* The table below shows the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week. 
+
+```{r collapse=TRUE, message=FALSE}
+instacart %>% 
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
+  group_by(product_name, order_dow) %>% 
+  summarise(mean_hr = mean(order_hour_of_day)) %>% 
+  pivot_wider(
+    names_from = "order_dow",
+    values_from = "mean_hr"
+  ) %>% 
+  knitr::kable()
+```
+
+“The Instacart Online Grocery Shopping Dataset 2017”, Accessed from https://www.instacart.com/datasets/grocery-shopping-2017 on June 24, 2017. 
+
 
