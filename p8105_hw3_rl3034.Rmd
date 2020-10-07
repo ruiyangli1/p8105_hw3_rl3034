@@ -10,6 +10,22 @@ This is my solution to HW3.
 ```{r setup, include=FALSE}
 library(p8105.datasets)
 library(tidyverse)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 ```
 
 
@@ -63,7 +79,7 @@ instacart %>%
 
 * The table below shows the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week. 
 
-```{r collapse=TRUE, message=FALSE}
+```{r collapse=TRUE}
 instacart %>% 
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
   group_by(product_name, order_dow) %>% 
@@ -76,5 +92,54 @@ instacart %>%
 ```
 
 “The Instacart Online Grocery Shopping Dataset 2017”, Accessed from https://www.instacart.com/datasets/grocery-shopping-2017 on June 24, 2017. 
+
+
+## Problem 2
+
+* Load, tidy, and wrangle the data. 
+
+```{r collapse=TRUE}
+accel_df = 
+  read_csv("./data/accel_data.csv") %>%
+  janitor::clean_names() %>% 
+	pivot_longer(
+    activity_1:activity_1440,
+    names_to = "minute",
+    names_prefix = "activity_", 
+    values_to = "activity"
+  ) %>%
+  mutate(
+  	minute = as.numeric(minute), 
+    day_cat = ifelse(day %in% c("Saturday", "Sunday"), "weekend", "weekday"),
+		day = factor(day, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))) %>%
+	relocate(week, day_id, day, day_cat)
+```
+
+This tidied accelerometer dataset contains `r nrow(accel_df)` observations and `r ncol(accel_df)` variables. These variables include week, day, minute and activity counts for each minute of a 24-hour day starting at midnight. 
+
+* The following table shows the total activities for each day. There are much fewer activities on the Saturdays of week 4 and 5. 
+
+```{r collapse=TRUE}
+accel_df %>% 
+  group_by(week, day) %>% 
+  summarize(activitiy_total = sum(activity)) %>% 
+  knitr::kable()
+```
+
+* Here is a single-panel plot that shows the 24-hour activity time courses for each day, colored by day of the week. Based on this graph, it can be seen that Sunday has more activities in the middle of the day; Monday, Wednesday, Friday and Saturday have more activities close to the end of the day; activities are the lowest at the beginning and the end of a day. 
+
+```{r}
+accel_df %>% 
+	group_by(day, minute) %>% 
+  ggplot(aes(x = minute, y = activity, color = day)) + 
+	geom_point(alpha = 0.3) + 
+	geom_line() + 
+	labs(
+    title = "24-hour activity time courses",
+    x = "Minute of a 24-hour day starting at midnight",
+    y = "Activity counts for each minute")
+```
+
+
 
 
