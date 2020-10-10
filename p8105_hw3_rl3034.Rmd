@@ -100,7 +100,7 @@ instacart %>%
 
 * Load, tidy, and wrangle the data. 
 
-```{r collapse=TRUE}
+```{r clean_accel_df, collapse=TRUE}
 accel_df = 
   read_csv("./data/accel_data.csv") %>%
   janitor::clean_names() %>% 
@@ -121,16 +121,20 @@ This tidied accelerometer dataset contains `r nrow(accel_df)` observations and `
 
 * The following table shows the total activities for each day. There are much fewer activities on the Saturdays of week 4 and 5. 
 
-```{r collapse=TRUE}
+```{r activity_week_day_table, collapse=TRUE}
 accel_df %>% 
   group_by(week, day) %>% 
   summarize(activitiy_total = sum(activity)) %>% 
+	pivot_wider(
+		names_from = "day", 
+		values_from = "activitiy_total"
+	) %>% 
   knitr::kable()
 ```
 
 * Here is a single-panel plot that shows the 24-hour activity time courses for each day, colored by day of the week. Based on this graph, it can be seen that Sunday has more activities in the middle of the day; Monday, Wednesday, Friday and Saturday have more activities close to the end of the day; activities are the lowest at the beginning and the end of a day. 
 
-```{r}
+```{r activity_time_course_plt}
 accel_df %>% 
 	group_by(day, minute) %>% 
   ggplot(aes(x = minute, y = activity, color = day)) + 
@@ -146,7 +150,7 @@ accel_df %>%
 
 ## Problem 3
 
-```{r collapse=TRUE}
+```{r load_ny_noaa_df, collapse=TRUE}
 data("ny_noaa")
 
 ny_noaa %>%
@@ -156,7 +160,7 @@ ny_noaa %>%
 
 This dataset was acquired from all New York state weather stations from January 1, 1981 through December 31, 2010. It contains `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns. Each weather station has multiple dates of observation, so the data is in the long format. There are precipitation variable, snow variables (snowfall and snow depth) and temperature variables (maximum temperature and minimum temperature). There is a lot of missing data in this dataset, which could be an issue. 43.7% data was missing for both temperature variables; 22.8% data on snow depth was missing; about 15% data on snowfall was missing. 
 
-```{r collapse=TRUE}
+```{r tidy_ny_noaa_df_count_na, collapse=TRUE}
 ny_noaa_tidy = 
 	ny_noaa %>% 
 	separate(date, into = c("year", "month", "day"), sep = "-") %>% 
@@ -180,7 +184,7 @@ ny_noaa_tidy %>%
 
 * Below is a two-panel plot showing the average max temperature in January and in July in each station across years. It looks that the average max temperatures in 2010 were slightly higher than those in 1981. Also, the average max temperatures in January in 2004 and 1994 are much lower than those in the rest of the years. The average max temperatures in July looks to be less variable than that in January and the temperatures did not change much. There are a few outliers. There is one extreme value in 1981 in January and some others in 1988, 2004, and 2007 in July. There seems to be one station has its values lower than the rest of the stations in July. 
 
-```{r collapse=TRUE}
+```{r avg_tmax_jan_jul_plt, collapse=TRUE}
 avg_tmax_jan_plt = 
 	ny_noaa_tidy %>% 
 	filter(month %in% c("January")) %>% 
@@ -218,7 +222,7 @@ avg_tmax_jan_plt / avg_tmax_jul_plt
 
 * The following two-panel plot shows (i) tmax vs tmin for the full dataset; and (ii) the distribution of snowfall values greater than 0 and less than 100 separately by year.
 
-```{r collapse=TRUE}
+```{r tmax_tmin_snow_plot, collapse=TRUE}
 tmin_tmax_p = 
 	ny_noaa_tidy %>% 
 	ggplot(aes(x = tmin, y = tmax)) + 
