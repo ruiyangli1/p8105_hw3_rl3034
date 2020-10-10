@@ -104,21 +104,20 @@ instacart %>%
 accel_df = 
   read_csv("./data/accel_data.csv") %>%
   janitor::clean_names() %>% 
-	pivot_longer(
+    pivot_longer(
     activity_1:activity_1440,
     names_to = "minute",
     names_prefix = "activity_", 
     values_to = "activity"
   ) %>%
   mutate(
-  	minute = as.numeric(minute), 
-  	hour = rep(rep(c(rep(0,59),rep(1:23, each = 60),24), 7), 5), 
+    minute = as.numeric(minute), 
     day_cat = ifelse(day %in% c("Saturday", "Sunday"), "weekend", "weekday"),
-		day = factor(day, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))) %>%
-	relocate(day_id, week, day, day_cat, hour)
+        day = factor(day, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))) %>%
+    relocate(week, day_id, day, day_cat)
 ```
 
-This tidied accelerometer dataset contains `r nrow(accel_df)` observations and `r ncol(accel_df)` variables. These variables include week, day, hour, minute and activity counts for each minute of a 24-hour day starting at midnight. 
+This tidied accelerometer dataset contains `r nrow(accel_df)` observations and `r ncol(accel_df)` variables. These variables include week, day, minute and activity counts for each minute of a 24-hour day starting at midnight. 
 
 * The following table shows the total activities for each day. There are much fewer activities on the Saturdays of week 4 and 5. 
 
@@ -133,21 +132,20 @@ accel_df %>%
   knitr::kable()
 ```
 
-* Here is a single-panel plot that shows the 24-hour activity time courses for each day, colored by day of the week. Based on this graph, it can be seen that Sunday has more activities in the middle of the day; Thursday has more activities around 6am. Monday, Wednesday, Friday and Saturday have more activities close to the end of the day; activities are the lowest at the beginning and the end of a day. 
-
+* Here is a single-panel plot that shows the 24-hour activity time courses for each day, colored by day of the week. Based on this graph, it can be seen that Sunday has more activities in the middle of the day; the rest of days have more activities close to the end of the day (around 7pm to 10pm); Saturday and Sunday have more activities around 4-5pm; activities are the lowest at the beginning and the end of a day.
+    
 ```{r activity_time_course_plt, collapse=TRUE}
 accel_df %>% 
-	group_by(day_id, day, hour) %>% 
-	summarise(activity_hr = sum(activity)) %>% 
-	ggplot(aes(x = hour, y = activity_hr, color = day, group = day_id)) + 
-	stat_smooth(se = FALSE, geom = "line", alpha = 0.8) + 
+	ggplot(aes(x = minute, y = activity, color = day, group = day_id)) +
+	geom_point(alpha = 0.3) + 
+	geom_line(alpha = 0.5) + 
 	labs(
     title = "24-hour activity time courses",
     x = "Minute of a 24-hour day starting at midnight",
-    y = "Activity counts") + 
-	scale_x_continuous(name = "Time (hour)",
-                     limits = c(0, 24),
-                     breaks = seq(0, 24, 6))
+    y = "Activity counts for each minute") + 
+	scale_x_continuous(limits = c(0, 1440),
+                     breaks = seq(0, 1440, 60)) +
+	theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
 
